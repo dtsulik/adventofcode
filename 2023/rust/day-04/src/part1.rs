@@ -2,29 +2,35 @@ use crate::custom_error::AocError;
 
 #[tracing::instrument]
 pub fn process(input: &str) -> miette::Result<String, AocError> {
+    let rv: i32 = input
+        .lines()
+        .map(|line| {
+            let (_, card) = line.split_once(':').unwrap();
+            let (winning, owned) = card.split_once('|').unwrap();
 
-    let rv: i32 = input.lines().map(|line| {
+            let winning_num: Vec<i32> = winning
+                .split_whitespace()
+                .map(|n| n.parse().unwrap())
+                .collect();
 
-        let (_, card) = line.split_once(':').unwrap();
-        let (winning, owned) = card.split_once('|').unwrap();
+            let owned_num: Vec<i32> = owned
+                .split_whitespace()
+                .map(|n| n.parse().unwrap())
+                .collect();
 
-        let winning_num: Vec<i32> = winning.split_whitespace().map(|n| {
-            n.parse().unwrap()
-        }).collect();
-
-        let owned_num: Vec<i32> = owned.split_whitespace().map(|n| {
-            n.parse().unwrap()
-        }).collect();
-
-
-owned_num.iter().fold(0, |acc, o| {
-    if winning_num.contains(o) {
-        if acc == 0 { 1 } else { acc * 2 }
-    } else {
-        acc
-    }
-})
-    }).sum();
+            owned_num.iter().fold(0, |acc, o| {
+                if winning_num.contains(o) {
+                    if acc == 0 {
+                        1
+                    } else {
+                        acc * 2
+                    }
+                } else {
+                    acc
+                }
+            })
+        })
+        .sum();
 
     Ok(rv.to_string())
 }
