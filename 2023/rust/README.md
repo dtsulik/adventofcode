@@ -1,6 +1,6 @@
 # Advent of Code 2023
 
-This year I've pre-set up a series of functionality for testing, benchmarking, and otherwise evaluating the performance of our Rust programs.
+This template for the advent of code using rust is created by [ChristopherBiscardi](https://github.com/ChristopherBiscardi/advent-of-code/tree/main/2023/rust). Huge thanks to him for creating it for everyone to enjoy.
 
 This includes the command `just work` which is passed a particular day and part and is the equivalent workflow of running all of these in a row and stopping if one fails, then re-starting the flow after changes.
 
