@@ -1,11 +1,9 @@
-use std::{cmp::Ordering, collections::HashMap, usize};
+use std::{cmp::Ordering, collections::HashMap};
 
 use crate::custom_error::AocError;
 
 use nom::{
-    branch::alt,
-    character::complete::{self, alpha1, alphanumeric1, digit1, space1},
-    multi::fold_many1,
+    character::complete::{self, alphanumeric1, space1},
     sequence::separated_pair,
     IResult, Parser,
 };

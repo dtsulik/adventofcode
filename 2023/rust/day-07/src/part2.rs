@@ -1,11 +1,9 @@
-use std::{cmp::Ordering, collections::HashMap, usize};
+use std::{cmp::Ordering, collections::HashMap};
 
 use crate::custom_error::AocError;
 
 use nom::{
-    branch::alt,
-    character::complete::{self, alpha1, alphanumeric1, digit1, space1},
-    multi::fold_many1,
+    character::complete::{self, alphanumeric1, space1},
     sequence::separated_pair,
     IResult, Parser,
 };
@@ -44,6 +42,21 @@ fn compare_hands(h1: &(&str, u32), h2: &(&str, u32)) -> Ordering {
     Ordering::Equal
 }
 
+fn process_hand_type(hand_type: &mut Vec<(&str, u32)>, ranking: u32) -> u32 {
+    // println!("{:?}", hand_type);
+    hand_type.sort_by(compare_hands);
+    // println!("sorted {:?}", hand_type);
+    let mut rv = 0;
+    let mut ranking = ranking;
+    for (h, bid) in hand_type.iter() {
+        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
+        rv += bid * ranking;
+        ranking -= 1;
+    }
+    println!("Sum total so far {rv}\n");
+    rv
+}
+
 #[tracing::instrument]
 pub fn process(input: &str) -> miette::Result<String, AocError> {
     let mut fives: Vec<(&str, u32)> = Vec::new();
@@ -64,7 +77,7 @@ pub fn process(input: &str) -> miette::Result<String, AocError> {
         for c in hand.chars() {
             *cards.entry(c).or_insert(0) += 1;
         }
-        print!("hand: {hand} has ");
+        // print!("hand: {hand} has ");
         let mut two_pair = false;
         let mut max_count = 0;
         let mut j_count = 0;
@@ -83,13 +96,13 @@ pub fn process(input: &str) -> miette::Result<String, AocError> {
             if count > max_count {
                 max_count = count;
             }
-            print!("'{}' x {}", _card, count);
+            // print!("'{}' x {}", _card, count);
         }
         max_count = match j_count {
             1 => {
-                if max_count == 1 {
-                    max_count
-                }else {
+                if two_pair {
+                    7
+                } else {
                     max_count + j_count
                 }
             }
@@ -97,133 +110,66 @@ pub fn process(input: &str) -> miette::Result<String, AocError> {
                 if max_count == 1 || max_count == 2 {
                     max_count + j_count
                 } else {
-                    7//full house
+                    5
                 }
             }
             3 => {
                 if max_count == 1 {
                     max_count + j_count
                 } else {
-                    7//full house again
+                    5
                 }
             }
             0 => max_count,
-            _ => max_count + j_count
+            _ => max_count + j_count,
         };
-        println!();
+        // println!();
         match max_count {
             5 => {
-                println!("We have full house");
+                // println!("We have full house");
                 fives.push((hand, bid));
             }
             4 => {
-                println!("We have four of a kind");
+                // println!("We have four of a kind");
                 four.push((hand, bid));
             }
             3 => {
-                println!("We have three of a kind");
+                // println!("We have three of a kind");
                 three.push((hand, bid));
             }
             2 => {
                 if two_pair {
-                    println!("We have pair of two of a kinds");
+                    // println!("We have pair of two of a kinds");
                     twos.push((hand, bid));
                 } else {
-                    println!("We have two of a kind");
+                    // println!("We have two of a kind");
                     one.push((hand, bid));
                 }
             }
             1 => {
-                println!("We have high card");
+                // println!("We have high card");
                 high.push((hand, bid));
             }
             7 => {
-                println!("We have full house");
+                // println!("We have full house");
                 fullhouse.push((hand, bid));
             }
             _ => {
                 panic!("yea nope")
             }
         }
-        println!();
+        // println!();
         ranking += 1;
     });
 
     let mut rv = 0;
 
-    println!("{:?}", fives);
-    fives.sort_by(compare_hands);
-    println!("sorted fives {:?}", fives);
-    for (h, bid) in fives {
-        println!("{h} has ranking {ranking} and {bid}");
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
+    let mut types = vec![&fives, &four, &fullhouse, &three, &twos, &one, &high];
+    for t in types.iter_mut() {
+        rv += process_hand_type(&mut t.clone(), ranking);
+        ranking -= t.len() as u32;
     }
-    println!("Sum total so far {rv}\n");
 
-    println!("{:?}", four);
-    four.sort_by(compare_hands);
-    println!("sorted four {:?}", four);
-
-    for (h, bid) in four {
-        println!("{h} has ranking {ranking} and {bid}");
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
-    }
-    println!("{:?}", fullhouse);
-    fullhouse.sort_by(compare_hands);
-    println!("sorted fullhouse {:?}", fullhouse);
-
-    for (h, bid) in fullhouse {
-        println!("{h} has ranking {ranking} and {bid}");
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
-    }
-    three.sort_by(compare_hands);
-    println!("sorted three {:?}", three);
-
-    for (h, bid) in three {
-        println!("{h} has ranking {ranking} and {bid}");
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
-    }
-    println!("{:?}", twos);
-    twos.sort_by(compare_hands);
-    println!("sorted two {:?}", twos);
-
-    println!("Sum total so far {rv}\n");
-    for (h, bid) in twos {
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
-    }
-    println!("{:?}", one);
-    one.sort_by(compare_hands);
-    println!("sorted one {:?}", one);
-    println!("Sum total so far {rv}\n");
-
-    for (h, bid) in one {
-        println!("{h} has ranking {ranking} and {bid}");
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
-    }
-    println!("{:?}", high);
-    high.sort_by(compare_hands);
-    println!("sorted high {:?}", high);
-
-    println!("Sum total so far {rv}\n");
-    for (h, bid) in high {
-        println!("{h} has ranking {ranking} and {bid}");
-        println!("{h} has ranking {ranking} and {bid} {}", bid * ranking);
-        rv += bid * ranking;
-        ranking -= 1;
-    }
-    println!("Sum total so far {rv}\n");
     Ok(rv.to_string())
 }
 #[cfg(test)]
@@ -241,4 +187,3 @@ QQQJA 483";
         Ok(())
     }
 }
-
