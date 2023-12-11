@@ -23,7 +23,7 @@ fn cleanup() -> std::io::Result<()> {
     let mut stdout = io::stdout();
     terminal::enable_raw_mode()?;
 
-    stdout.execute(cursor::Hide)?;
+    stdout.execute(cursor::Show)?;
 
     stdout.flush()?;
     terminal::disable_raw_mode()?;
@@ -50,6 +50,8 @@ fn print_maze(maze: &HashMap<Node, char>, clear: bool) -> std::io::Result<()> {
         if node.y > current_y {
             // Move to the next line if y coordinate changes
             writeln!(stdout)?;
+            let (_, y) = cursor::position().unwrap();
+            stdout.execute(cursor::MoveTo(0, y + node.y as u16))?;
             current_y = node.y;
         }
 
@@ -172,12 +174,19 @@ fn walk(
             let nei = maze.get(&nein);
             match nei {
                 Some(ne) => {
-                    let is_seen = seen.get(&n).unwrap();
-                    if is_neighbor_valid(*ne, to) && *is_seen != '*' {
+                    if *ne != 'S' {
                         seen.insert(n, '*');
                         walk(acc, maze, nein, to, seen);
                         *acc += 1;
+                    } else {
+                        seen.insert(n, '*');
                     }
+                    // let is_seen = seen.get(&n).unwrap();
+                    // if is_neighbor_valid(*ne, to) && *is_seen != '*' {
+                    //     seen.insert(n, '*');
+                    //     walk(acc, maze, nein, to, seen);
+                    //     *acc += 1;
+                    // }
                 }
                 None => {}
             }
