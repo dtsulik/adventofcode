@@ -1,38 +1,21 @@
+// use indicatif::ParallelProgressIterator;
+use itertools::{repeat_n, Itertools};
 use nom::{
-    bytes::complete::tag,
-    character::complete::{self, one_of, space1},
-    combinator::map,
-    multi::{many1, separated_list1},
+    bytes::complete::is_a,
+    character::complete::{self, char as tag_char, space1},
+    multi::separated_list1,
     sequence::separated_pair,
     IResult, Parser,
 };
+use rayon::prelude::*;
 
 use crate::custom_error::AocError;
 
-#[derive(PartialEq, PartialOrd)]
-struct Region {
-    solved: bool,
-    chars: Vec<char>,
-    len: isize,
-}
-
-fn parse_regions(input: &str) -> IResult<&str, Vec<Region>> {
-    separated_list1(
-        tag("."),
-        map(many1(one_of("#?")), |chars: Vec<char>| Region {
-            solved: !chars.contains(&'?'),
-            len: chars.len() as isize,
-            chars,
-        }),
-    )
-    .parse(input)
-}
-
-fn parse_line(input: &str) -> IResult<&str, (Vec<Region>, Vec<u16>)> {
+fn parse_line(input: &str) -> IResult<&str, (&str, Vec<u64>)> {
     separated_pair(
-        parse_regions,
+        is_a("?.#"),
         space1,
-        separated_list1(tag(","), complete::u16),
+        separated_list1(tag_char(','), complete::u64),
     )
     .parse(input)
 }
@@ -43,33 +26,62 @@ pub fn factorial(num: isize) -> isize {
 
 #[tracing::instrument]
 pub fn process(input: &str) -> miette::Result<String, AocError> {
-    let input = "???.### 1,1,3
-.??..??...?##. 1,1,3
-?#?#?#?#?#?#?#? 1,3,1,6
-????.#...#... 4,1,1
-????.######..#####. 1,6,5
-?###???????? 3,2,1";
+    //     let input = "???.### 1,1,3
+    // .??..??...?##. 1,1,3
+    // ?#?#?#?#?#?#?#? 1,3,1,6
+    // ????.#...#... 4,1,1
+    // ????.######..#####. 1,6,5
+    // ?###???????? 3,2,1";
 
     let rv: usize = input
+        // .par_lines()
         .lines()
         .map(|line| {
-            let (_, (pipe_layout, journal)) = parse_line(line).expect("Shoud match");
+            let (_, (row, journal)) =
+                parse_line(line).expect("Should get a row with its journal entries");
 
-            let number_of_regions = pipe_layout.iter().count();
-            let journal_entires = journal.iter().count();
-            let sum: u16 = journal.iter().sum();
+            let unknown_count = row.chars().filter(|&c| c == '?').count();
 
-            pipe_layout.iter().map(|region| if !region.solved {});
+            let all_possible_combinations: Vec<String> =
+                repeat_n([".", "#"].into_iter(), unknown_count)
+                    .multi_cartesian_product()
+                    .map(|s| s.join(""))
+                    .collect();
 
-            journal
-                .iter()
-                .map(|group| {
-                    println!("Looking for {group}");
-                    // calc partitions
-                    //
+            all_possible_combinations
+                // .iter()
+                .par_iter()
+                // .progress_count(all_possible_combinations.len() as u64)
+                .map(|layout| {
+                    let mut it = layout.chars();
+                    let possible_solution: String = line
+                        .chars()
+                        .map(|c| {
+                            if c == '?' {
+                                it.next().expect("This should never happen")
+                            } else {
+                                c
+                            }
+                        })
+                        .collect();
+                    let possible_journal: Vec<u64> = possible_solution
+                        .chars()
+                        .group_by(|&c| c == '#')
+                        .into_iter()
+                        .filter_map(|(check, group)| {
+                            if check {
+                                Some(group.into_iter().count() as u64)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
 
-                    // for each partition use combinatorics n.fac()/k.fac() * (n - k).fac()
-                    1
+                    if possible_journal == journal {
+                        1
+                    } else {
+                        0
+                    }
                 })
                 .sum::<usize>()
         })
