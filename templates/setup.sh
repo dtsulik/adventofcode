@@ -28,5 +28,6 @@ fi
 
 mkdir -p $YEAR/$LANG/
 cp -r templates/$LANG/year/* $YEAR/$LANG/
+sed -i "s/YEARREPLACEME/$YEAR/g" $YEAR/$LANG/justfile
 ln -s ../../templates/$LANG/day $YEAR/$LANG/daily-template 
 

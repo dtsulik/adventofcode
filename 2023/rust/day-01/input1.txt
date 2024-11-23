@@ -1,0 +1,1 @@
+../../../adventofcode-inputs/2023/day-01/input1.txt
