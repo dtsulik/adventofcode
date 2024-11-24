@@ -10,12 +10,12 @@ pub fn process(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn test_process() -> miette::Result<()> {
-        todo!("haven't built test yet");
-        let input = "";
-        assert_eq!("", process(input)?);
+    #[rstest]
+    #[case("", "")]
+    fn test_process(#[case] input: &str, #[case] expected: &str) -> miette::Result<()> {
+        assert_eq!(expected, process(input)?);
         Ok(())
     }
 }
