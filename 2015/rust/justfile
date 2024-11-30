@@ -3,7 +3,7 @@ work day part:
 lint day:
    cargo clippy -p {{day}}
 test +FLAGS='-p day-01':
-    cargo nextest run {{FLAGS}}
+    cargo nextest run {{FLAGS}} --nocapture --no-fail-fast
 bench-all:
     cargo bench -q > benchmarks.txt
 bench day part:
