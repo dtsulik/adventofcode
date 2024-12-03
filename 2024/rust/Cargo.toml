@@ -29,6 +29,7 @@ test-log = { version = "0.2.13", default-features = false, features = [
 ] }
 indicatif = { version = "0.17.7", features = ["rayon"] }
 crossterm = "0.28.1"
+regex = "1.11.1"
 
 [profile.flamegraph]
 inherits = "release"
