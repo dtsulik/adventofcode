@@ -14,8 +14,12 @@ dhat day part:
     cargo run --profile dhat --features dhat-heap --package {{day}} --bin {{part}}
 create day:
     cargo generate --path ./daily-template --name {{day}}
-    ln -s ../../../adventofcode-inputs/YEARREPLACEME/{{day}}/input1.txt  {{day}}/input1.txt
-    ln -s ../../../adventofcode-inputs/YEARREPLACEME/{{day}}/input2.txt  {{day}}/input2.txt
+    # ln -s ../../../adventofcode-inputs/2025/{{day}}/input1.txt  {{day}}/input1.txt
+    # ln -s ../../../adventofcode-inputs/2025/{{day}}/input2.txt  {{day}}/input2.txt
+
+clean:
+    rm -f *bench.txt
+    rm -f perf*
 
 # You can find SESSION by using Chrome tools:
 # 1) Go to https://adventofcode.com/2022/day/1/input
